@@ -2,7 +2,6 @@
 
 #include "Grabber.h"
 #include "Engine/World.h"
-#include "Components/ActorComponent.h"
 #include "DrawDebugHelpers.h"
 
 #define OUT
@@ -24,7 +23,32 @@ void UGrabber::BeginPlay()
 	Super::BeginPlay();
 	
 	UE_LOG(LogTemp, Warning, TEXT("Grabber here"));
+
+	///Look for atached physics handle
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	if (!PhysicsHandle)
+		UE_LOG(LogTemp, Error, TEXT("The Physics Handle dne for %s"), *(GetOwner()->GetName()) );
+
+	Input = GetOwner()->FindComponentByClass<UInputComponent>();
+	if (Input) {
+		Input->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		Input->BindAction("Release", IE_Released, this, &UGrabber::Release);
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("The Input Handle dne for %s"), *(GetOwner()->GetName()));
+
+	}
 	
+}
+
+void UGrabber::Grab()
+{
+	UE_LOG(LogTemp, Error, TEXT("Grab Pressed"));
+}
+
+void URelease()
+{
+	UE_LOG(LogTemp, Error, TEXT("Grab Released"));
 }
 
 
