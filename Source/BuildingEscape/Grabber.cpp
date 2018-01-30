@@ -3,6 +3,7 @@
 #include "Grabber.h"
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
+
 #include "DrawDebugHelpers.h"
 
 #define OUT
@@ -28,7 +29,7 @@ void UGrabber::BeginPlay()
 void UGrabber::FindPhysicsHandleComponent()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	if (!PhysicsHandle)
+	if (PhysicsHandle == nullptr)
 		UE_LOG(LogTemp, Error, TEXT("The Physics Handle dne for %s"), *(GetOwner()->GetName()));
 }
 
@@ -45,8 +46,6 @@ void UGrabber::SetupInputComponent()
 	}
 }
 
-
-
 void UGrabber::Grab()
 {
 	UE_LOG(LogTemp, Error, TEXT("Grab Pressed"));
@@ -56,19 +55,19 @@ void UGrabber::Grab()
 	auto ComponentToGrab = HitResult.GetComponent();
 	auto ActorHit = HitResult.GetActor();
 	
-
 	if (ActorHit) {
 		// If we hit something then attach a physics handle
-		PhysicsHandle->GrabComponent(
+		PhysicsHandle->GrabComponentAtLocationWithRotation(
 			/*the primitive component*/
 			ComponentToGrab,
 			NAME_None,
 			/*The grab location, in this case the vertex of the object*/
 			ComponentToGrab->GetOwner()->GetActorLocation(),
-			/*allow rotation*/
-			true);
+			/*Keep the original rotation of the actor*/
+			ComponentToGrab->GetOwner()->GetActorRotation());
 	}
-		// TODO attach physics handle
+	
+	// TODO attach physics handle
 }
 
 void UGrabber::Release()
@@ -84,18 +83,8 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Get the player view point this tick
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation,
-		OUT PlayerViewPointRotation
-	);
-
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
-
 	if (PhysicsHandle->GrabbedComponent) {
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 
 	// If the physics handle is attached
@@ -107,18 +96,6 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 {
-	// Get the player view point this tick
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation,
-		OUT PlayerViewPointRotation
-	);
-
-	// UE_LOG(LogTemp, Warning, TEXT("Location: %s, Rotation: %s"), *PlayerViewPointLocation.ToString(), *PlayerViewPointRotation.ToString());
-
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
-
 	/// Draw a red line
 	/*DrawDebugLine(
 	GetWorld(),
@@ -147,19 +124,44 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 		/*Send in a reference to be initialized*/
 		OUT Hit,
 		/*Send in a pointer to the start of the ray*/
-		PlayerViewPointLocation,
+		GetReachLineStart(),
 		/*Send in a pointer to the end of the ray*/
-		LineTraceEnd,
+		GetReachLineEnd(),
 		/*List of object types it's am looking for*/
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		/*Additional parameters used for the trace (see above what has been added*/
 		TraceParameters
 	);
 
+	// check if an actor that has been queried for has been hit
 	AActor* ActorHit = Hit.GetActor();
 	if (ActorHit) {
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *(ActorHit->GetName()));
 	}
 
 	return Hit;
+}
+
+FVector UGrabber::GetReachLineStart()
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+
+	return PlayerViewPointLocation;
+}
+
+FVector UGrabber::GetReachLineEnd()
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+
+	return (PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach));
 }

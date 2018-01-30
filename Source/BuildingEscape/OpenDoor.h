@@ -43,4 +43,7 @@ private:
 	AActor* ActorThatOpens;	
 	AActor* Owner;
 
+	// returns total mass in kg
+	float GetTotalMassOfActorsOnPlate();
+
 };
