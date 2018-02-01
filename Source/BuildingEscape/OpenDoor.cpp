@@ -23,17 +23,19 @@ void UOpenDoor::BeginPlay()
 
 	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 	Owner = GetOwner();
-
+	if (PressurePlate == nullptr) { UE_LOG(LogTemp, Warning, TEXT("No PressurePlate")); }
 }
 
 void UOpenDoor::OpenDoor()
 {
+	if (Owner == nullptr) { return; }
 	// set the rotation
 	Owner->SetActorRotation(FRotator(/*pitch(y)*/0.f, /*yaw (z)*/OpenAngle, /*roll(x)*/0.0f));
 }
 
 void UOpenDoor::CloseDoor()
 {
+	if (Owner == nullptr) { return; }
 	// set the rotation
 	Owner->SetActorRotation(FRotator(0.f,-90.f,0.f));
 }
@@ -65,6 +67,7 @@ float UOpenDoor::GetTotalMassOfActorsOnPlate()
 
 	// Find all the overlapping actors
 	TArray<AActor*> OverlappingActors;	// define a TArray that will hold an Array of Actor pointers
+	if (PressurePlate == nullptr) { return TotalMass; }
 	PressurePlate->GetOverlappingActors(OUT OverlappingActors); // Initialize the TArray using this method
 
 	// Iterate through them adding their masses
