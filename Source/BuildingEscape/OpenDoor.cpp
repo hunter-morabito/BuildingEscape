@@ -29,7 +29,7 @@ void UOpenDoor::BeginPlay()
 void UOpenDoor::OpenDoor()
 {
 	//if (Owner == nullptr) { return; }
-	OnOpenRequest.Broadcast();
+	OnOpen.Broadcast();
 	// set the rotation
 	//Owner->SetActorRotation(FRotator(/*pitch(y)*/0.f, /*yaw (z)*/OpenAngle, /*roll(x)*/0.0f));
 }
@@ -38,7 +38,7 @@ void UOpenDoor::CloseDoor()
 {
 	if (Owner == nullptr) { return; }
 	// set the rotation
-	Owner->SetActorRotation(FRotator(0.f,-90.f,0.f));
+	//Owner->SetActorRotation(FRotator(0.f,-90.f,0.f));
 }
 
 
@@ -49,16 +49,13 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// Poll the Trigger Volume
 	// If the ActorThatOpens is in the volume
-	if (GetTotalMassOfActorsOnPlate() > 50.f) // TODO make into parameter
+	if (GetTotalMassOfActorsOnPlate() > TriggerMass) // TODO make into parameter
 	{
-		OpenDoor();
-		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+		OnOpen.Broadcast();
 	}
-	
-	// check if time is up.
-	if ((GetWorld()->GetTimeSeconds() - LastDoorOpenTime) >= DoorCloseDelay) 
+	else // check if time is up.
 	{
-		CloseDoor();
+		OnClose.Broadcast();
 	}
 }
 
