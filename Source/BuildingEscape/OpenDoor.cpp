@@ -24,6 +24,10 @@ void UOpenDoor::BeginPlay()
 	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 	Owner = GetOwner();
 	if (PressurePlate == nullptr) { UE_LOG(LogTemp, Warning, TEXT("No PressurePlate")); }
+
+	//TriggerMass += ActorThatOpens->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *(FString::SanitizeFloat(TriggerMass)));
 }
 
 void UOpenDoor::OpenDoor()
